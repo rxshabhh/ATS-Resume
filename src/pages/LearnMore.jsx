@@ -23,7 +23,7 @@ function LearnMore() {
               overall compatibility with automated hiring systems.
             </p>
           </div>
-          <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/60">
+          <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/60 hover:shadow-2xl hover:-translate-y-1">
             <img
               src="../../public/assests/backgrounds/learnmore_background.png"
               alt="ATS Resume Analyzer interface preview"
@@ -33,7 +33,7 @@ function LearnMore() {
         </div>
       </div>
       <div className="max-w-6xl mx-auto px-6 pb-20">
-        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-3xl p-10 shadow-xl transition-all duration-300
+        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-3xl p-10 shadow-xl
       hover:shadow-2xl
       hover:-translate-y-1">
           <h2 className="text-3xl font-semibold text-gray-900 mb-4">
@@ -59,7 +59,7 @@ function LearnMore() {
           ].map((item) => (
             <div
               key={item.step}
-              className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1" 
+              className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl p-8 shadow-xl hover:shadow-2xl hover:-translate-y-1" 
             >
               <div className="text-blue-600 text-xl font-semibold mb-2">
                 {item.step}
@@ -76,7 +76,8 @@ function LearnMore() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-3xl p-10 shadow-xL transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-3xl p-10 shadow-xL 
+          hover:shadow-2xl hover:-translate-y-1">
           <h2 className="text-3xl font-semibold text-gray-900 mb-6">
             Why This Matters
           </h2>
