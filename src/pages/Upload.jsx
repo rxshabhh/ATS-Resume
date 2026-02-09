@@ -33,7 +33,6 @@ function Upload() {
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Resume Upload */}
           <div className="
             bg-white/80 backdrop-blur-2xl
             border border-white/60
@@ -67,8 +66,6 @@ function Upload() {
               </label>
             </div>
           </div>
-
-          {/* Job Description */}
           <div className="
             bg-white/80 backdrop-blur-2xl
             border border-white/60
