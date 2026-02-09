@@ -106,7 +106,7 @@ function LearnMore() {
               Rishabh Sinha
             </h3>
             <p className="text-gray-600">
-              Developer & System Design Enthusiast
+              Developer & Backend Enthusiast
             </p>
           </div>
         </div>
