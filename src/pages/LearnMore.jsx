@@ -1,6 +1,5 @@
-import Navbar from '../components/Navbar';
-import Background from '../components/Background';
-
+import Navbar from '../components/Navbar'
+import Background from '../components/Background'
 
 function LearnMore() {
   return (
@@ -23,19 +22,18 @@ function LearnMore() {
               overall compatibility with automated hiring systems.
             </p>
           </div>
-          <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/60 hover:shadow-2xl hover:-translate-y-1">
+          <div className="rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/60 transition-all duration-500 hover:shadow-3xl">
             <img
-              src="../../public/assests/backgrounds/learnmore_background.png"
+              src="/assests/backgrounds/learnmore_background.png"
               alt="ATS Resume Analyzer interface preview"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
             />
           </div>
         </div>
       </div>
+
       <div className="max-w-6xl mx-auto px-6 pb-20">
-        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-3xl p-10 shadow-xl
-      hover:shadow-2xl
-      hover:-translate-y-1">
+        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-3xl p-10 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
           <h2 className="text-3xl font-semibold text-gray-900 mb-4">
             What This Platform Does
           </h2>
@@ -47,6 +45,7 @@ function LearnMore() {
           </p>
         </div>
       </div>
+
       <div className="max-w-7xl mx-auto px-6 pb-24">
         <h2 className="text-3xl font-semibold text-gray-900 mb-10 text-center">
           How It Works
@@ -59,7 +58,7 @@ function LearnMore() {
           ].map((item) => (
             <div
               key={item.step}
-              className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl p-8 shadow-xl hover:shadow-2xl hover:-translate-y-1" 
+              className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-2xl p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
             >
               <div className="text-blue-600 text-xl font-semibold mb-2">
                 {item.step}
@@ -76,8 +75,7 @@ function LearnMore() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 pb-24">
-        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-3xl p-10 shadow-xL 
-          hover:shadow-2xl hover:-translate-y-1">
+        <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-3xl p-10 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
           <h2 className="text-3xl font-semibold text-gray-900 mb-6">
             Why This Matters
           </h2>
@@ -89,6 +87,7 @@ function LearnMore() {
           </ul>
         </div>
       </div>
+
       <div className="max-w-5xl mx-auto px-6 pb-32 text-center">
         <h2 className="text-3xl font-semibold text-gray-900 mb-10">
           Project Creators
@@ -113,11 +112,7 @@ function LearnMore() {
         </div>
       </div>
     </Background>
-  );
+  )
 }
 
-
-export default LearnMore;
-
-
-
+export default LearnMore
