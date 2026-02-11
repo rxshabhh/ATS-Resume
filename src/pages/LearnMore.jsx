@@ -26,7 +26,7 @@ function LearnMore() {
             <img
               src="/assests/backgrounds/learnmore_background.png"
               alt="ATS Resume Analyzer interface preview"
-              className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+              className="w-full h-auto object-cover transition-transform duration-500 hover:scale-110"
             />
           </div>
         </div>
