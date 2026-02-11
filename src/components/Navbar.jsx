@@ -4,9 +4,10 @@ import Button from './Button';
 
 const Navbar = () => {
   return (
-    <div className="fixed top-0 z-50 flex justify-center">
-      <nav className="mt-4 bg-white/70 backdrop-blur-xl border border-white/50 rounded-3xl shadow-md w-full max-w-6xl">
+    <div className="fixed top-0 left-0 w-full z-50 flex justify-center px-6">
+      <nav className="mt-4 w-full max-w-6xl bg-white/70 backdrop-blur-xl border border-white/50 rounded-3xl shadow-md">
         <div className="px-6 py-4 flex items-center justify-between">
+          
           <Link to="/" className="flex items-center gap-3">
             <div className="bg-white p-2 rounded-lg shadow">
               <FileText className="w-6 h-6 text-blue-600" />
@@ -15,9 +16,11 @@ const Navbar = () => {
               ATS Resume Analyzer
             </span>
           </Link>
-
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/" className="text-gray-700 hover:text-blue-600">
+            <Link 
+              to="/" 
+              className="text-gray-700 hover:text-blue-600 transition"
+            >
               Home
             </Link>
             <Link to="/upload">
@@ -25,6 +28,7 @@ const Navbar = () => {
                 Get Started
               </Button>
             </Link>
+            
           </div>
         </div>
       </nav>
@@ -33,4 +37,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
