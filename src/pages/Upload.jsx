@@ -17,7 +17,7 @@ function Upload() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    navigate('/results');
+    navigate('/analyze');
   };
 
   return (
@@ -103,3 +103,4 @@ function Upload() {
 }
 
 export default Upload;
+
