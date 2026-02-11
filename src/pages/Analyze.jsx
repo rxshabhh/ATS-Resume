@@ -4,7 +4,9 @@ import Background from '../components/Background'
 function Analyze(){
     return(
         <Background>
-            <Navbar />
+         <Navbar />
+          <div className="pt-28"/>
+
 
         </Background>
     )
