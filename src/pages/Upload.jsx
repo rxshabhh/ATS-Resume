@@ -23,6 +23,7 @@ function Upload() {
   return (
     <Background>
       <Navbar />
+      <div className="pt-28"/>
       <div className="max-w-4xl mx-auto px-6 py-20">
         <div className="text-center mb-14">
           <h1 className="text-5xl font-semibold text-gray-900 mb-4">
