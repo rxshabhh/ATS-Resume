@@ -4,7 +4,7 @@ import Button from './Button';
 
 const Navbar = () => {
   return (
-    <div className="sticky top-0 z-50 flex justify-center">
+    <div className="fixed top-0 z-50 flex justify-center">
       <nav className="mt-4 bg-white/70 backdrop-blur-xl border border-white/50 rounded-3xl shadow-md w-full max-w-6xl">
         <div className="px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
@@ -33,3 +33,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
