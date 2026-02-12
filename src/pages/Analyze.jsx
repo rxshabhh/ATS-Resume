@@ -66,7 +66,6 @@ function Analyze() {
                     <li>Git</li>
                   </ul>
                 </div>
-
                 <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg p-6">
                   <h3 className="font-semibold mb-4">
                     Missing Keywords
@@ -78,7 +77,6 @@ function Analyze() {
                     <li>Microservices</li>
                   </ul>
                 </div>
-
               </div>
 
               <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg p-6 text-center">
@@ -87,8 +85,8 @@ function Analyze() {
                   View Detailed Score: 70%
                 </p>
               </div>
-
             </div>
+
 
             <div className="lg:col-span-1 space-y-8">
               <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg p-6">
@@ -101,10 +99,8 @@ function Analyze() {
                   <li>✖ Avoid complex graphics</li>
                 </ul>
               </div>
-
               <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg p-6 h-90">
                 <h3 className="font-semibold mb-4">My Profile</h3>
-
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-gray-500 border-b">
@@ -125,6 +121,7 @@ function Analyze() {
                 </table>
               </div>
             </div>
+
           </div>
         </div>
       </div>
