@@ -87,11 +87,46 @@ function Dashboard() {
 
           <div className="w-full text-center mt-24">
             <p className="text-gray-900 text-6xl font-semibold max-w-4xl mx-auto">
-              <b>Enhancv’s Resume Checker forms its ATS score with a two-tier system</b>
+              <b>
+                Enhancv’s Resume Checker forms its ATS score with a two-tier
+                system
+              </b>
             </p>
           </div>
 
           <div className="max-w-7xl mx-auto mt-16 flex flex-col lg:flex-row items-center justify-center gap-16">
+            <div className="hidden lg:flex justify-center animate-fadeUp">
+              <div className="bg-white rounded-2xl shadow-xl p-6 w-[420px]">
+                <div className="mb-6 flex justify-center">
+                  <lottie-player
+                    src="/animations/animation1.json"
+                    background="transparent"
+                    speed="1"
+                    style={{ width: "300px", height: "300px" }}
+                    loop
+                    autoplay
+                  ></lottie-player>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full lg:w-1/2 animate-fadeUp">
+              <p className="text-lg text-gray-700 text-center lg:text-left">
+                Our advanced ATS scoring system evaluates your resume across
+                structure and keyword optimization, ensuring maximum
+                compatibility with applicant tracking systems.
+              </p>
+            </div>
+          </div>
+
+          <div className="max-w-7xl mx-auto mt-16 flex flex-col lg:flex-row items-center justify-center gap-16">
+            <div className="w-full lg:w-1/2 animate-fadeUp">
+              <p className="text-lg text-gray-700 text-center lg:text-left">
+                Our advanced ATS scoring system evaluates your resume across
+                structure and keyword optimization, ensuring maximum
+                compatibility with applicant tracking systems.
+              </p>
+            </div>
             <div className="hidden lg:flex justify-center animate-fadeUp">
               <div className="bg-white rounded-2xl shadow-xl p-6 w-[420px]">
                 <div className="mb-6 flex justify-center">
@@ -106,15 +141,7 @@ function Dashboard() {
                 </div>
               </div>
             </div>
-
-            <div className="w-full lg:w-1/2 animate-fadeUp">
-              <p className="text-lg text-gray-700 text-center lg:text-left">
-                Our advanced ATS scoring system evaluates your resume across structure and keyword optimization,
-                ensuring maximum compatibility with applicant tracking systems.
-              </p>
-            </div>
           </div>
-
         </main>
       </div>
     </Background>
