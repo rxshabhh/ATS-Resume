@@ -2,8 +2,11 @@ import React from "react";
 import Navbar from "../components/Navbar";
 import Background from "../components/Background";
 import Particles from "react-tsparticles";
+import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
+  const navigate = useNavigate();
+
   return (
     <Background>
       <Particles
@@ -58,7 +61,12 @@ function Dashboard() {
                 </p>
 
                 <div className="flex justify-center">
-                  <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition transform hover:scale-105">
+                  <button
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition transform hover:scale-105"
+                    onClick={() => {
+                      navigate("/Upload");
+                    }}
+                  >
                     Upload Your Resume
                   </button>
                 </div>
@@ -88,7 +96,7 @@ function Dashboard() {
           <div className="w-full text-center mt-24">
             <p className="text-gray-900 text-6xl font-semibold max-w-4xl mx-auto">
               <b>
-                Enhancv’s Resume Checker forms its ATS score with a two-tier
+                Enhance’s Resume Checker forms its ATS score with a two-tier
                 system
               </b>
             </p>
