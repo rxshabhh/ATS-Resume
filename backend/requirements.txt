@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+psycopg2-binary
+sqlalchemy
+python-dotenv
+python-multipart
+pdfplumber         
+google-genai 
+alembic 
+pydantic-settings
+redis
+
