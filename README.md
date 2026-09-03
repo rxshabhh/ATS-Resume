@@ -62,7 +62,11 @@ cd ATS-Resume
 
 ### 2. Configure Environment Variables
 
-Create a `.env` file in the **project root**:
+Copy the template and fill in your values:
+
+```bash
+cp .env.example .env
+```
 
 ```env
 # PostgreSQL
@@ -74,9 +78,13 @@ GEMINI_API_KEY=your_gemini_api_key_here
 # CORS — frontend origin
 FRONTEND_URL=http://localhost:5173
 
-# Backend URL — used by frontend
-VITE_API_BASE_URL=http://localhost:8000
+# Optional — omit to run without caching
+REDIS_URL=redis://localhost:6379
 ```
+
+`.env` is gitignored. It is read once, by `backend/app/core/config.py`; the
+database layer and Alembic both import those settings rather than parsing
+`.env` again.
 
 > **💡 Tip:** Get your Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey).
 
@@ -108,6 +116,9 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Download the spaCy model used for keyword extraction
+python -m spacy download en_core_web_sm
 
 # Run database migrations
 alembic upgrade head
@@ -161,29 +172,31 @@ The app will be running at **`http://localhost:5173`**.
 
 ```
 ATS-Resume/
-├── backend/                  # FastAPI backend
+├── backend/                      # FastAPI backend
 │   ├── app/
-│   │   ├── main.py           # App entry point & CORS config
-│   │   ├── routes/           # API endpoints
-│   │   ├── services/         # Business logic & Gemini integration
-│   │   ├── models/           # SQLAlchemy models
-│   │   └── config.py         # Settings & env loading
-│   ├── migrations/           # Alembic DB migrations
-│   ├── tests/                # Backend tests
+│   │   ├── main.py               # App entry, CORS, cache lifespan
+│   │   ├── db.py                 # Engine and session dependency
+│   │   ├── models.py             # SQLAlchemy models
+│   │   ├── api/analyze.py        # Deterministic keyword scoring (not yet mounted)
+│   │   ├── routers/resume.py     # /api/analyze and /api/history
+│   │   ├── core/                 # Settings, skill vocabulary and weights
+│   │   ├── services/             # PDF parsing, spaCy keywords, Gemini client
+│   │   └── utils/                # Normalization and phrase matching
+│   ├── migrations/               # Alembic migrations
+│   ├── tests/
 │   └── requirements.txt
 │
-├── frontend/                 # React frontend
+├── frontend/                     # React + Vite frontend
 │   ├── src/
-│   │   ├── pages/            # Dashboard, Upload, Analyze, History
-│   │   ├── components/       # Layout, Sidebar
-│   │   ├── context/          # ThemeContext (dark/light mode)
-│   │   ├── services/         # API client
-│   │   └── index.css         # Global styles & Tailwind config
-│   ├── package.json
-│   └── tailwind.config.js
+│   │   ├── pages/                # Dashboard, Upload, Analyze, History, LearnMore
+│   │   ├── components/           # Layout, Sidebar, SkillsCard
+│   │   ├── context/              # ThemeContext (dark/light)
+│   │   └── services/api.js       # API client
+│   └── vite.config.js            # Proxies /api to localhost:8000
 │
-├── .env                      # Environment variables
-└── README.md                 # You are here!
+├── execution/                    # PowerShell dev-server launchers
+├── .env.example
+└── README.md
 ```
 
 ---
@@ -204,7 +217,7 @@ pytest tests/ -v
 | **Dark mode not working** | Make sure `@custom-variant dark` is in `index.css` (required for Tailwind v4) |
 | **Backend can't connect to DB** | Verify `DATABASE_URL` in `.env` and that PostgreSQL is running |
 | **Gemini API errors** | Check your `GEMINI_API_KEY` is valid and not rate-limited |
-| **Redis connection error** | Redis is optional — the app works without it. Install Redis if you want caching |
+| **Redis connection error** | Redis is optional. The app pings it at startup and runs uncached if it does not answer |
 | **Frontend build fails** | Run `npm install` again and ensure Node.js ≥ 18 |
 
 ---
