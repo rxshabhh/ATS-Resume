@@ -1,25 +1,24 @@
 from logging.config import fileConfig
 import os
-from dotenv import load_dotenv
+import sys
 
-from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
 
-# Load .env from workspace root (two levels up from backend/migrations/)
-load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
-
-import sys
+# Make the backend package importable so we can share the app's settings
+# rather than re-reading .env with a second set of rules.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from app.core.config import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-# Override sqlalchemy.url with value from .env
-db_url = os.environ["DATABASE_URL"].replace("%", "%%")
-config.set_main_option("sqlalchemy.url", db_url)
+# Override sqlalchemy.url from settings. Percent signs are escaped because
+# alembic reads this value through configparser's interpolation.
+config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
@@ -46,7 +45,7 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     from sqlalchemy import create_engine
     
-    connectable = create_engine(os.environ["DATABASE_URL"])
+    connectable = create_engine(settings.database_url)
 
     with connectable.connect() as connection:
         context.configure(
