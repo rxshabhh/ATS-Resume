@@ -2,14 +2,23 @@
   "keyword_score": {
     "endpoint": "/api/keyword-score",
     "samples": 15,
-    "mean_ms": 19.7,
-    "p50_ms": 15.9,
-    "p95_ms": 79.3,
-    "min_ms": 14.2,
-    "max_ms": 79.3
+    "mean_ms": 18.1,
+    "p50_ms": 17.5,
+    "p95_ms": 24.8,
+    "min_ms": 15.7,
+    "max_ms": 24.8
   },
+  "analyze_cold": {
+    "endpoint": "/api/analyze (cache miss)",
+    "samples": 3,
+    "mean_ms": 11750.9,
+    "p50_ms": 10567.3,
+    "p95_ms": 16456.0,
+    "min_ms": 8229.3,
+    "max_ms": 16456.0
+  },
+  "keyword_vs_ai_speedup_x": 603.8,
   "notes": [
-    "AI path unavailable: 502 from /api/analyze: The analysis service is unavailable. Please try again shortly.",
-    "warm-cache measurement skipped: the AI path is unavailable, so there is nothing to cache"
+    "warm-cache measurement unavailable: 502 from /api/analyze: The analysis service is unavailable. Please try again shortly."
   ]
 }

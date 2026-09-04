@@ -2,6 +2,8 @@ import asyncio
 import hashlib
 import json
 import logging
+import random
+import time
 
 from google import genai
 
@@ -11,7 +13,22 @@ logger = logging.getLogger(__name__)
 
 _model_name = "gemini-2.5-flash"
 
-MAX_ATTEMPTS = 2
+MAX_ATTEMPTS = 3
+
+# Base for exponential backoff: waits of roughly 1s then 2s, each with jitter.
+# A transient overload needs time to clear; the previous code retried after the
+# round trip alone (~1.3s) and reliably hit the same condition twice.
+RETRY_BASE_SECONDS = 1.0
+
+# Errors worth trying again. 429 is rate limiting or quota, 5xx is the service
+# being briefly unable to answer -- both can succeed on a later attempt.
+RETRYABLE_MARKERS = ("429", "RESOURCE_EXHAUSTED", "500", "502", "503", "504",
+                     "UNAVAILABLE", "INTERNAL", "DEADLINE_EXCEEDED")
+
+# Errors that will never succeed on retry: the key is wrong, or the request is
+# malformed. Retrying these spends a second request to learn nothing.
+TERMINAL_MARKERS = ("API_KEY_INVALID", "PERMISSION_DENIED", "UNAUTHENTICATED",
+                    "400", "401", "403")
 
 
 class AnalysisError(Exception):
@@ -141,14 +158,37 @@ Respond ONLY with a valid JSON object in exactly this format:
 """
 
 
+def _is_retryable(exc: Exception) -> bool:
+    """
+    Should this failure be tried again?
+
+    Classification is by string matching on the SDK's error text, which is
+    crude but is what the client actually exposes: google-genai raises
+    ClientError/ServerError carrying the status in the message rather than a
+    typed status field this code can switch on. Terminal markers are checked
+    first so that a 400 API_KEY_INVALID is never mistaken for a transient 4xx.
+    """
+    text = str(exc)
+    if any(marker in text for marker in TERMINAL_MARKERS):
+        return False
+    if any(marker in text for marker in RETRYABLE_MARKERS):
+        return True
+    # Unrecognised failures are usually transport-level (connection reset, DNS,
+    # a timeout) and are worth one more attempt.
+    return True
+
+
 def _call_gemini(resume_text: str, job_description: str) -> dict:
     """
-    Synchronous Gemini call.
+    Synchronous Gemini call, with bounded retries.
 
-    Retries once on a transport error or unparseable output, then gives up with
-    an AnalysisError. It deliberately does not fall back to a zero score: a
-    fabricated 0 would be persisted to history and shown to the user as though
-    the resume had genuinely scored nothing.
+    Retries a transient failure with exponential backoff and jitter, and gives
+    up immediately on one that cannot succeed -- an invalid key does not become
+    valid on the second attempt, and retrying it only spends quota.
+
+    It deliberately does not fall back to a zero score: a fabricated 0 would be
+    persisted to history and shown to the user as though the resume had
+    genuinely scored nothing.
     """
     prompt = _build_prompt(resume_text, job_description)
     last_error: Exception | None = None
@@ -178,13 +218,28 @@ def _call_gemini(resume_text: str, job_description: str) -> dict:
             # output. The original code caught only JSON errors, so the retry
             # never fired on the failure that actually happens in production.
             last_error = exc
+            retryable = _is_retryable(exc)
             logger.warning(
-                "Gemini attempt %d/%d failed: %s | raw response: %.200s",
+                "Gemini attempt %d/%d failed (%s): %s | raw response: %.200s",
                 attempt,
                 MAX_ATTEMPTS,
+                "retryable" if retryable else "terminal",
                 exc,
                 raw or "<no response>",
             )
+
+            if not retryable:
+                raise AnalysisError(f"Gemini analysis failed, not retryable: {exc}")
+
+            if attempt < MAX_ATTEMPTS:
+                # Exponential backoff with full jitter. The jitter matters when
+                # several requests fail at once: without it they would all wake
+                # and retry in the same instant, recreating the load spike that
+                # caused the failure.
+                backoff = RETRY_BASE_SECONDS * (2 ** (attempt - 1))
+                delay = random.uniform(0, backoff)
+                logger.info("retrying in %.1fs", delay)
+                time.sleep(delay)
 
     raise AnalysisError(f"Gemini analysis failed after {MAX_ATTEMPTS} attempts: {last_error}")
 
