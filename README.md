@@ -21,6 +21,7 @@
 |---|---|
 | **📄 Resume Upload** | Upload PDF resumes and have them parsed automatically |
 | **🤖 AI Analysis** | Get a detailed ATS score breakdown powered by Google Gemini |
+| **🧮 Deterministic Keyword Score** | A second, reproducible score computed locally from a weighted skill vocabulary — no API call, and it shows its arithmetic |
 | **📊 Keyword Matching** | See how well your resume aligns with job descriptions |
 | **📝 Structure Review** | Receive feedback on formatting, readability, and ATS compliance |
 | **📜 History Tracking** | View all your past analyses with scores at a glance |
@@ -168,6 +169,55 @@ The app will be running at **`http://localhost:5173`**.
 
 ---
 
+## 🧮 How Scoring Works
+
+The app produces **two independent scores** from the same inputs.
+
+### 1. AI score — `POST /api/analyze`
+
+The resume and job description go to Gemini in a single prompt, which returns a
+score, a paragraph of feedback, and a list of missing keywords. It is good at
+judgement — phrasing, structure, what a recruiter would notice — but it is not
+reproducible, and it cannot show why it chose a number.
+
+The response is validated rather than trusted: the score is clamped to 0–100,
+and a failed or unparseable call raises instead of persisting a fabricated 0.
+
+### 2. Keyword score — `POST /api/keyword-score`
+
+A deterministic scorer with no external dependency:
+
+1. `services/nlp.py` extracts candidate terms — multi-word and punctuated
+   skills (`rest api`, `ci/cd`, `c++`) are matched first and removed from the
+   text, then spaCy reduces what remains to the lemmas of its nouns and proper
+   nouns.
+2. Terms outside the curated vocabulary in `core/skill_weights.py` are dropped.
+3. `services/matcher.py` weights each skill the job asks for by how specific it
+   is (a core language is worth 3.0, an umbrella term like "api" 1.0) and
+   returns the share of that weight the resume covers.
+
+```
+score = (weight of matched skills) / (weight of all required skills) × 100
+```
+
+Because the vocabulary and weights are fixed, the same inputs always give the
+same number, and the response includes a `breakdown` listing every required
+skill, its weight, and whether it matched — so the score can be checked by hand.
+
+A job description containing no recognised skill scores `null`, not `0`.
+Zero means "asked for skills, matched none"; null means "there was nothing to
+score", and reporting a confident 0 for the second case would be a lie.
+
+### Why both
+
+They fail in different ways, which is the point. The AI score is the readable
+one; the keyword score is the defensible one. When they disagree sharply, that
+gap is worth looking at. And since the keyword path calls nothing external, the
+frontend falls back to it when Gemini is unavailable — a partial answer instead
+of an error page.
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -177,7 +227,7 @@ ATS-Resume/
 │   │   ├── main.py               # App entry, CORS, cache lifespan
 │   │   ├── db.py                 # Engine and session dependency
 │   │   ├── models.py             # SQLAlchemy models
-│   │   ├── api/analyze.py        # Deterministic keyword scoring (not yet mounted)
+│   │   ├── api/analyze.py        # /api/keyword-score — deterministic scoring
 │   │   ├── routers/resume.py     # /api/analyze and /api/history
 │   │   ├── core/                 # Settings, skill vocabulary and weights
 │   │   ├── services/             # PDF parsing, spaCy keywords, Gemini client
@@ -219,6 +269,8 @@ pytest tests/ -v
 | **Gemini API errors** | Check your `GEMINI_API_KEY` is valid and not rate-limited |
 | **Redis connection error** | Redis is optional. The app pings it at startup and runs uncached if it does not answer |
 | **Frontend build fails** | Run `npm install` again and ensure Node.js ≥ 18 |
+| **`/api/keyword-score` returns 503** | The spaCy model is missing. Run `python -m spacy download en_core_web_sm` |
+| **`/api/analyze` returns 502** | Gemini rejected the request — usually an expired or revoked `GEMINI_API_KEY`. The app falls back to the keyword score, which still works |
 
 ---
 

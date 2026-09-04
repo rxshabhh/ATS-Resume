@@ -1,18 +1,14 @@
 import asyncio
 import hashlib
-import io
 import json
 import logging
 
-import pdfplumber
 from google import genai
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Configure Gemini client once at module load
-client = genai.Client(api_key=settings.gemini_api_key)
 _model_name = "gemini-2.5-flash"
 
 MAX_ATTEMPTS = 2
@@ -20,6 +16,26 @@ MAX_ATTEMPTS = 2
 
 class AnalysisError(Exception):
     """Raised when the model call fails or returns something unusable."""
+
+
+_client = None
+
+
+def get_client() -> genai.Client:
+    """
+    Build the Gemini client on first use.
+
+    Constructing it at import time makes every module that transitively imports
+    this one fail when no API key is configured -- including the deterministic
+    scorer, which does not need one. Deferring it means a missing or rejected
+    key surfaces as a failure of the one endpoint that actually depends on it.
+    """
+    global _client
+    if _client is None:
+        if not settings.gemini_api_key:
+            raise AnalysisError("GEMINI_API_KEY is not set.")
+        _client = genai.Client(api_key=settings.gemini_api_key)
+    return _client
 
 
 # ---------------------------------------------------------------------------
@@ -81,16 +97,6 @@ def _cache_key(resume_text: str, job_description: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# PDF extraction
-# ---------------------------------------------------------------------------
-def extract_text_from_pdf(file_bytes: bytes) -> str:
-    """Extract plain text from a PDF given its raw bytes."""
-    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-        pages = [page.extract_text() or "" for page in pdf.pages]
-    return "\n".join(pages).strip()
-
-
-# ---------------------------------------------------------------------------
 # Gemini call — runs in a thread so it never blocks the event loop
 # ---------------------------------------------------------------------------
 def _strip_code_fence(raw: str) -> str:
@@ -143,7 +149,7 @@ def _call_gemini(resume_text: str, job_description: str) -> dict:
     for attempt in range(1, MAX_ATTEMPTS + 1):
         raw = ""
         try:
-            response = client.models.generate_content(
+            response = get_client().models.generate_content(
                 model=_model_name,
                 contents=prompt,
             )

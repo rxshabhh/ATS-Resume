@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { Upload as UploadIcon, FileText, Briefcase, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { analyzeResume } from '../services/api';
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+import { analyzeResume, keywordScore, MAX_FILE_SIZE } from '../services/api';
 
 function Upload() {
   const navigate = useNavigate();
@@ -19,7 +17,7 @@ function Upload() {
       return false;
     }
     if (file.size > MAX_FILE_SIZE) {
-      setError('File size must be less than 2MB.');
+      setError(`File size must be less than ${MAX_FILE_SIZE / (1024 * 1024)}MB.`);
       return false;
     }
     return true;
@@ -64,6 +62,31 @@ function Upload() {
       const result = await analyzeResume(resumeFile, jobDescription);
       navigate('/analyze', { state: { result, filename: resumeFile.name } });
     } catch (err) {
+      // 502/503 mean the model API is unreachable, not that the request was
+      // bad. The deterministic scorer needs no external service, so fall back
+      // to it and say plainly that the AI feedback is missing — a partial
+      // answer the user can act on beats an error page.
+      if (err.status === 502 || err.status === 503) {
+        try {
+          const scored = await keywordScore(resumeFile, jobDescription);
+          navigate('/analyze', {
+            state: {
+              result: {
+                ats_score: null,
+                feedback: null,
+                missing_keywords: scored.missing_keywords,
+                keyword_score: scored,
+                ai_unavailable: true,
+              },
+              filename: resumeFile.name,
+            },
+          });
+          return;
+        } catch (fallbackErr) {
+          setError(fallbackErr.message || 'Both analysis paths are unavailable.');
+          return;
+        }
+      }
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);

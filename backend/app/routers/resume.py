@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import List
 
@@ -6,16 +7,33 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import ResumeAnalysis
-from app.services.ats_service import AnalysisError, analyze_resume, extract_text_from_pdf
+from app.services.ats_service import AnalysisError, analyze_resume
+from app.services.keyword_score import score_keywords
+from app.services.nlp import ModelUnavailable
+from app.utils.upload import read_resume_text
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["resume"])
 
-# Resumes are a page or two; anything larger is a mistake or an attack. The
-# whole file is read into memory, so this bound is what keeps a single upload
-# from exhausting the process.
-MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
+
+async def _deterministic_score(resume_text: str, job_desc: str) -> dict | None:
+    """
+    Run the keyword scorer, returning None if it cannot run.
+
+    It is reported alongside the model's score rather than instead of it: the
+    two are computed from the same inputs by different methods, so a wide gap
+    between them is itself information. A failure here must not fail the
+    request, since this is supplementary to the model's answer.
+    """
+    try:
+        return await asyncio.to_thread(score_keywords, resume_text, job_desc)
+    except ModelUnavailable as exc:
+        logger.warning("keyword scoring unavailable: %s", exc)
+        return None
+    except Exception as exc:
+        logger.warning("keyword scoring failed: %s", exc)
+        return None
 
 
 @router.post("/analyze")
@@ -26,37 +44,13 @@ async def analyze(
 ):
     """
     Accept a PDF resume and job description, run ATS scoring via Gemini,
-    persist the result, and return the analysis.
+    persist the result, and return the analysis alongside a deterministic
+    keyword score computed from the same inputs.
     """
-    if resume.content_type not in ("application/pdf", "application/octet-stream"):
-        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
-
     if not job_desc.strip():
         raise HTTPException(status_code=400, detail="Job description must not be empty.")
 
-    file_bytes = await resume.read()
-
-    if not file_bytes:
-        raise HTTPException(status_code=400, detail="The uploaded file is empty.")
-
-    if len(file_bytes) > MAX_UPLOAD_BYTES:
-        raise HTTPException(
-            status_code=413,
-            detail=f"Resume exceeds the {MAX_UPLOAD_BYTES // (1024 * 1024)} MB limit.",
-        )
-
-    try:
-        resume_text = extract_text_from_pdf(file_bytes)
-    except Exception as exc:
-        logger.warning("PDF parse failed for %s: %s", resume.filename, exc)
-        raise HTTPException(status_code=422, detail="Could not parse the PDF.")
-
-    if not resume_text:
-        raise HTTPException(
-            status_code=422,
-            detail="No text could be extracted from the PDF. Scanned or image-only "
-                   "resumes are not supported.",
-        )
+    resume_text = await read_resume_text(resume)
 
     try:
         result = await analyze_resume(resume_text, job_desc)
@@ -66,6 +60,10 @@ async def analyze(
             status_code=502,
             detail="The analysis service is unavailable. Please try again shortly.",
         )
+
+    # Computed after the model call, not before: on a 502 the client retries
+    # against /api/keyword-score, so scoring here first would only be wasted work.
+    keyword_result = await _deterministic_score(resume_text, job_desc)
 
     record = ResumeAnalysis(
         filename=resume.filename,
@@ -85,6 +83,7 @@ async def analyze(
         "feedback": record.feedback,
         "missing_keywords": result["missing_keywords"],
         "created_at": record.created_at,
+        "keyword_score": keyword_result,
     }
 
 

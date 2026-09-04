@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.analyze import router as keyword_router
 from app.core.config import settings
 from app.routers.resume import router as resume_router
 from app.services.ats_service import close_cache, init_cache
@@ -40,6 +41,7 @@ app.add_middleware(
 )
 
 app.include_router(resume_router)
+app.include_router(keyword_router)
 
 
 @app.get("/")

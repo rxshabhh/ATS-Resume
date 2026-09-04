@@ -1,28 +1,41 @@
-from fastapi import APIRouter, UploadFile, File, Form
-from app.services.parser import extract_text
-from app.services.nlp import extract_keywords
-from app.services.matcher import match_keywords
-from app.core.skill_vocab import VALID_SKILLS
+"""
+Deterministic keyword-scoring endpoint.
 
-router = APIRouter(prefix="/analyze", tags=["ATS Analysis"])
+Separate from /api/analyze on purpose: this route makes no external call, so it
+answers even when the model API is down or unkeyed, and its output is fully
+reproducible. It is the endpoint to point at when asked how a score was
+arrived at.
+"""
 
-@router.post("/")
-async def analyze_resume(
+import asyncio
+import logging
+
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+
+from app.services.keyword_score import score_keywords
+from app.services.nlp import ModelUnavailable
+from app.utils.upload import read_resume_text
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/api", tags=["keyword scoring"])
+
+
+@router.post("/keyword-score")
+async def keyword_score(
     resume: UploadFile = File(...),
-    job_description: str = Form(...)
+    job_desc: str = Form(...),
 ):
-    resume_text = extract_text(resume)
+    """Score a resume against a job description using the weighted skill vocabulary."""
+    if not job_desc.strip():
+        raise HTTPException(status_code=400, detail="Job description must not be empty.")
 
-    jd_keywords_raw = extract_keywords(job_description)
-    resume_keywords = extract_keywords(resume_text)
+    resume_text = await read_resume_text(resume)
 
-    jd_keywords = {k for k in jd_keywords_raw if k in VALID_SKILLS}
+    try:
+        result = await asyncio.to_thread(score_keywords, resume_text, job_desc)
+    except ModelUnavailable as exc:
+        logger.error("keyword scoring unavailable: %s", exc)
+        raise HTTPException(status_code=503, detail=str(exc))
 
-    matched, missing, score = match_keywords(jd_keywords, resume_keywords)
-
-    return {
-        "ats_score": score,
-        "matched_keywords": sorted(matched),
-        "missing_keywords": sorted(missing),
-        "total_jd_keywords": len(jd_keywords)
-    }
+    return {"filename": resume.filename, **result}
