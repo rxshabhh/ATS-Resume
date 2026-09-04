@@ -1,0 +1,40 @@
+{
+  "pair": "backend-partial",
+  "llm": {
+    "runs_requested": 15,
+    "runs_succeeded": 15,
+    "runs_failed": 0,
+    "scores": [
+      25.0,
+      30.0,
+      25.0,
+      25.0,
+      25.0,
+      20.0,
+      25.0,
+      25.0,
+      25.0,
+      25.0,
+      25.0,
+      20.0,
+      25.0,
+      28.5,
+      25.0
+    ],
+    "distinct_scores": [
+      20.0,
+      25.0,
+      28.5,
+      30.0
+    ],
+    "min": 20.0,
+    "max": 30.0,
+    "range": 10.0,
+    "mean": 24.9,
+    "median": 25.0,
+    "stdev": 2.49,
+    "plus_minus": 5.0,
+    "latency_mean_s": 8.94
+  },
+  "deterministic_score": 23.81
+}
