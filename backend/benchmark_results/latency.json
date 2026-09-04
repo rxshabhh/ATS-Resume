@@ -1,0 +1,15 @@
+{
+  "keyword_score": {
+    "endpoint": "/api/keyword-score",
+    "samples": 15,
+    "mean_ms": 19.7,
+    "p50_ms": 15.9,
+    "p95_ms": 79.3,
+    "min_ms": 14.2,
+    "max_ms": 79.3
+  },
+  "notes": [
+    "AI path unavailable: 502 from /api/analyze: The analysis service is unavailable. Please try again shortly.",
+    "warm-cache measurement skipped: the AI path is unavailable, so there is nothing to cache"
+  ]
+}

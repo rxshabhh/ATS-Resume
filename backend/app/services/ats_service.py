@@ -69,9 +69,16 @@ async def init_cache() -> None:
 
     try:
         _redis = aioredis.from_url(
-            settings.redis_url, encoding="utf-8", decode_responses=True
+            settings.redis_url,
+            encoding="utf-8",
+            decode_responses=True,
+            # Bound the probe. A host that blackholes the connection rather
+            # than refusing it (an IPv6 address with nothing listening, say)
+            # would otherwise hold up application startup for the full default
+            # timeout before we conclude the cache is unavailable.
+            socket_connect_timeout=2,
         )
-        await _redis.ping()
+        await asyncio.wait_for(_redis.ping(), timeout=3)
     except Exception as exc:
         logger.info("Redis unavailable (%s); running without cache", exc)
         _redis = None

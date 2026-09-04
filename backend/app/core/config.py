@@ -12,7 +12,11 @@ class Settings(BaseSettings):
     database_url: str
     gemini_api_key: str = ""
     frontend_url: str = "http://localhost:5173"
-    redis_url: str = "redis://localhost:6379"
+    # 127.0.0.1, not localhost: on Windows "localhost" resolves to ::1 first,
+    # and a Docker-published port does not answer over IPv6 — the connection
+    # hangs until it times out rather than being refused, so the cache probe
+    # stalls startup and then reports Redis as unavailable while it is running.
+    redis_url: str = "redis://127.0.0.1:6379"
 
     model_config = {
         "env_file": ENV_FILE,
