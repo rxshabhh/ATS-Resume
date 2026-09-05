@@ -1,69 +1,55 @@
-<p align="center">
-  <h1 align="center">✨ Ether Talent — ATS Resume Evaluator</h1>
-  <p align="center">
-    AI-powered resume analysis tool that scores your resume for ATS compatibility, keyword matching, and structural readability using Google Gemini.
-  </p>
-</p>
+# Ether Talent — ATS Resume Evaluator
 
-<p align="center">
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?style=for-the-badge&logo=tailwindcss" />
-  <img src="https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi" />
-  <img src="https://img.shields.io/badge/Gemini_AI-Google-4285F4?style=for-the-badge&logo=google" />
-  <img src="https://img.shields.io/badge/PostgreSQL-15-336791?style=for-the-badge&logo=postgresql" />
-</p>
+A resume analysis service that scores resumes for ATS compatibility, keyword relevance, and structural readability. Every evaluation is computed twice: once by Google Gemini, and once by a deterministic scorer that runs locally and shows its arithmetic.
+
+**Stack:** React 18 · Tailwind CSS v4 · Vite · FastAPI · SQLAlchemy · Alembic · PostgreSQL · Redis (optional) · Google Gemin
 
 ---
 
-## 📸 Features
+## Features
 
 | Feature | Description |
 |---|---|
-| **📄 Resume Upload** | Upload PDF resumes and have them parsed automatically |
-| **🤖 AI Analysis** | Get a detailed ATS score breakdown powered by Google Gemini |
-| **🧮 Deterministic Keyword Score** | A second, reproducible score computed locally from a weighted skill vocabulary — no API call, and it shows its arithmetic |
-| **📊 Keyword Matching** | See how well your resume aligns with job descriptions |
-| **📝 Structure Review** | Receive feedback on formatting, readability, and ATS compliance |
-| **📜 History Tracking** | View all your past analyses with scores at a glance |
-| **🌗 Dark / Light Mode** | Toggle between themes with a single click |
+| Resume upload | PDF resumes are uploaded and parsed automatically |
+| AI analysis | Detailed ATS score breakdown powered by Google Gemini |
+| Deterministic keyword score | A reproducible second score computed locally from a weighted skill vocabulary, with no external API call |
+| Keyword matching | Measures alignment between a resume and a target job description |
+| Structure review | Feedback on formatting, readability, and ATS compliance |
+| History tracking | All past analyses stored and retrievable with scores at a glance |
+| Theming | Dark and light modes |
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | React 18, Tailwind CSS v4, Vite, Lucide Icons |
-| **Backend** | FastAPI, SQLAlchemy, Alembic (migrations) |
-| **AI Engine** | Google Gemini via `google-genai` SDK |
-| **Database** | PostgreSQL |
-| **Caching** | Redis (optional) |
+| Frontend | React 18, Tailwind CSS v4, Vite, Lucide Icons |
+| Backend | FastAPI, SQLAlchemy, Alembic |
+| AI engine | Google Gemini via the `google-genai` SDK |
+| NLP | spaCy (`en_core_web_sm`) |
+| Database | PostgreSQL |
+| Caching | Redis (optional) |
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-Make sure you have the following installed:
+- Node.js 18 or later, with npm
+- Python 3.10 or later
+- PostgreSQL 15 or later
+- Git
 
-- **Node.js** ≥ 18 & **npm**
-- **Python** ≥ 3.10
-- **PostgreSQL** 15+
-- **Git**
-
----
-
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/your-username/ATS-Resume.git
 cd ATS-Resume
 ```
 
-### 2. Configure Environment Variables
-
-Copy the template and fill in your values:
+### 2. Configure environment variables
 
 ```bash
 cp .env.example .env
@@ -73,152 +59,109 @@ cp .env.example .env
 # PostgreSQL
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/ats_db
 
-# Google Gemini API Key
+# Google Gemini API key
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# CORS — frontend origin
+# CORS - frontend origin
 FRONTEND_URL=http://localhost:5173
 
-# Optional — omit to run without caching
+# Optional - omit to run without caching
 REDIS_URL=redis://localhost:6379
 ```
 
-`.env` is gitignored. It is read once, by `backend/app/core/config.py`; the
-database layer and Alembic both import those settings rather than parsing
-`.env` again.
+`.env` is gitignored. It is read once, by `backend/app/core/config.py`; the database layer and Alembic both import those settings rather than parsing `.env` again.
 
-> **💡 Tip:** Get your Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey).
+Gemini API keys are issued from [Google AI Studio](https://aistudio.google.com/apikey).
 
----
-
-### 3. Set Up the Database
-
-Open your PostgreSQL shell or GUI and create the database:
+### 3. Create the database
 
 ```sql
 CREATE DATABASE ats_db;
 ```
 
----
-
-### 4. Set Up the Backend
+### 4. Set up the backend
 
 ```bash
 cd backend
 
-# Create a virtual environment
 python -m venv venv
 
-# Activate it
-# Windows:
+# Windows
 venv\Scripts\activate
-# macOS/Linux:
+# macOS / Linux
 source venv/bin/activate
 
-# Install dependencies
 pip install -r requirements.txt
 
-# Download the spaCy model used for keyword extraction
+# spaCy model used for keyword extraction
 python -m spacy download en_core_web_sm
 
-# Run database migrations
 alembic upgrade head
 
-# Start the backend server
 uvicorn app.main:app --reload
 ```
 
-The API will be running at **`http://localhost:8000`**.
+The API runs at `http://localhost:8000`. Interactive Swagger documentation is available at `http://localhost:8000/docs`.
 
-You can verify it by visiting [`http://localhost:8000/docs`](http://localhost:8000/docs) for the interactive Swagger UI.
+### 5. Set up the frontend
 
----
-
-### 5. Set Up the Frontend
-
-Open a **new terminal**:
+In a new terminal:
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start the development server
 npm run dev
 ```
 
-The app will be running at **`http://localhost:5173`**.
+The application runs at `http://localhost:5173`.
 
 ---
 
-## 📖 How to Use
+## Usage
 
-1. **Open the app** at `http://localhost:5173`
-2. Navigate to the **Upload** page using the sidebar or top nav pills
-3. **Upload a PDF resume** — it will be parsed automatically
-4. Optionally paste a **Job Description** to compare against
-5. Click **Analyze** — the AI will evaluate your resume and return:
-   - An **ATS Score** (0–100)
-   - **Keyword Match** analysis
-   - **Structure & Readability** feedback
-   - **Improvement suggestions**
-6. View all your past evaluations on the **History** page
-7. Click any history entry to **revisit** the full analysis
-8. Toggle **Dark/Light mode** using the Sun/Moon icons at the bottom of the sidebar
+1. Open `http://localhost:5173`.
+2. Go to the Upload page from the sidebar or the top navigation.
+3. Upload a PDF resume; it is parsed on upload.
+4. Optionally paste a job description to compare against.
+5. Run Analyze. The response contains an ATS score (0–100), keyword match analysis, structure and readability feedback, and improvement suggestions.
+6. Past evaluations are listed on the History page; selecting an entry restores the full analysis.
+7. Theme is toggled from the sidebar.
 
 ---
 
-## 🧮 How Scoring Works
+## How Scoring Works
 
-The app produces **two independent scores** from the same inputs.
+The application produces two independent scores from the same inputs.
 
-### 1. AI score — `POST /api/analyze`
+### AI score — `POST /api/analyze`
 
-The resume and job description go to Gemini in a single prompt, which returns a
-score, a paragraph of feedback, and a list of missing keywords. It is good at
-judgement — phrasing, structure, what a recruiter would notice — but it is not
-reproducible, and it cannot show why it chose a number.
+The resume and job description are sent to Gemini in a single prompt, which returns a score, a paragraph of feedback, and a list of missing keywords. This path is strong on judgement — phrasing, structure, and what a recruiter would notice — but it is not reproducible and cannot explain how it arrived at a number.
 
-The response is validated rather than trusted: the score is clamped to 0–100,
-and a failed or unparseable call raises instead of persisting a fabricated 0.
+The response is validated rather than trusted: the score is clamped to 0–100, and a failed or unparseable call raises instead of persisting a fabricated 0.
 
-### 2. Keyword score — `POST /api/keyword-score`
+### Keyword score — `POST /api/keyword-score`
 
 A deterministic scorer with no external dependency:
 
-1. `services/nlp.py` extracts candidate terms — multi-word and punctuated
-   skills (`rest api`, `ci/cd`, `c++`) are matched first and removed from the
-   text, then spaCy reduces what remains to the lemmas of its nouns and proper
-   nouns.
-2. Terms outside the curated vocabulary in `core/skill_weights.py` are dropped.
-3. `services/matcher.py` weights each skill the job asks for by how specific it
-   is (a core language is worth 3.0, an umbrella term like "api" 1.0) and
-   returns the share of that weight the resume covers.
+1. `services/nlp.py` extracts candidate terms. Multi-word and punctuated skills (`rest api`, `ci/cd`, `c++`) are matched first and removed from the text, after which spaCy reduces the remainder to the lemmas of its nouns and proper nouns.
+2. Terms outside the curated vocabulary in `core/skill_weights.py` are discarded.
+3. `services/matcher.py` weights each required skill by specificity — a core language is worth 3.0, an umbrella term such as "api" 1.0 — and returns the share of that weight the resume covers.
 
 ```
-score = (weight of matched skills) / (weight of all required skills) × 100
+score = (weight of matched skills) / (weight of all required skills) x 100
 ```
 
-Because the vocabulary and weights are fixed, the same inputs always give the
-same number, and the response includes a `breakdown` listing every required
-skill, its weight, and whether it matched — so the score can be checked by hand.
+Because the vocabulary and weights are fixed, identical inputs always produce an identical number. The response includes a `breakdown` listing every required skill, its weight, and whether it matched, so the score can be verified by hand.
 
-A job description containing no recognised skill scores `null`, not `0`.
-Zero means "asked for skills, matched none"; null means "there was nothing to
-score", and reporting a confident 0 for the second case would be a lie.
+A job description containing no recognised skill scores `null`, not `0`. Zero means skills were required and none matched; null means there was nothing to score, and reporting a confident 0 in that case would be inaccurate.
 
 ### Why both
 
-They fail in different ways, which is the point. The AI score is the readable
-one; the keyword score is the defensible one. When they disagree sharply, that
-gap is worth looking at. And since the keyword path calls nothing external, the
-frontend falls back to it when Gemini is unavailable — a partial answer instead
-of an error page.
+The two paths fail differently, which is the point. The AI score is the readable one; the keyword score is the defensible one, and a sharp disagreement between them is itself a signal worth inspecting. Because the keyword path calls nothing external, the frontend falls back to it when Gemini is unavailable, returning a partial answer instead of an error.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ATS-Resume/
@@ -227,7 +170,7 @@ ATS-Resume/
 │   │   ├── main.py               # App entry, CORS, cache lifespan
 │   │   ├── db.py                 # Engine and session dependency
 │   │   ├── models.py             # SQLAlchemy models
-│   │   ├── api/analyze.py        # /api/keyword-score — deterministic scoring
+│   │   ├── api/analyze.py        # /api/keyword-score - deterministic scoring
 │   │   ├── routers/resume.py     # /api/analyze and /api/history
 │   │   ├── core/                 # Settings, skill vocabulary and weights
 │   │   ├── services/             # PDF parsing, spaCy keywords, Gemini client
@@ -251,7 +194,7 @@ ATS-Resume/
 
 ---
 
-## 🧪 Running Tests
+## Tests
 
 ```bash
 cd backend
@@ -260,26 +203,21 @@ pytest tests/ -v
 
 ---
 
-## ⚠️ Troubleshooting
+## Troubleshooting
 
-| Issue | Solution |
+| Issue | Resolution |
 |---|---|
-| **Dark mode not working** | Make sure `@custom-variant dark` is in `index.css` (required for Tailwind v4) |
-| **Backend can't connect to DB** | Verify `DATABASE_URL` in `.env` and that PostgreSQL is running |
-| **Gemini API errors** | Check your `GEMINI_API_KEY` is valid and not rate-limited |
-| **Redis connection error** | Redis is optional. The app pings it at startup and runs uncached if it does not answer |
-| **Frontend build fails** | Run `npm install` again and ensure Node.js ≥ 18 |
-| **`/api/keyword-score` returns 503** | The spaCy model is missing. Run `python -m spacy download en_core_web_sm` |
-| **`/api/analyze` returns 502** | Gemini rejected the request — usually an expired or revoked `GEMINI_API_KEY`. The app falls back to the keyword score, which still works |
+| Dark mode not working | Ensure `@custom-variant dark` is present in `index.css`, required by Tailwind v4 |
+| Backend cannot connect to the database | Verify `DATABASE_URL` in `.env` and that PostgreSQL is running |
+| Gemini API errors | Confirm `GEMINI_API_KEY` is valid and not rate-limited |
+| Redis connection error | Redis is optional; the app pings it at startup and runs uncached if it does not respond |
+| Frontend build fails | Re-run `npm install` and confirm Node.js 18 or later |
+| `/api/keyword-score` returns 503 | The spaCy model is missing; run `python -m spacy download en_core_web_sm` |
+| `/api/analyze` returns 502 | Gemini rejected the request, usually due to an expired or revoked `GEMINI_API_KEY`. The app falls back to the keyword score |
 
 ---
 
-## 📜 License
+## License
 
-This project is for educational and personal use.
-
----
-
-<p align="center">
-  Built with ❤️ using React, FastAPI, and Google Gemini
-</p>
+For educational and personal use.
+````
