@@ -29,6 +29,7 @@ import argparse
 import json
 import statistics
 import time
+import uuid
 from pathlib import Path
 
 import httpx
@@ -134,9 +135,16 @@ def main() -> None:
               f"  [{args.ai_samples} Gemini requests]")
         cold: list[float] = []
         last_cold_jd: str | None = None
+        # A token unique to this run. Without it the probe strings are the same
+        # on every run, so the second run of the day finds them already in the
+        # cache and times cache hits while calling them misses -- which is
+        # exactly what happened: a "cache miss" measured at 90ms against a real
+        # Gemini round trip of ~10s. The cache TTL is 24h, so fixed probes are
+        # only ever honest once.
+        run_token = uuid.uuid4().hex[:12]
         try:
             for i in range(args.ai_samples):
-                probe_jd = f"{jd} Reference {i}."
+                probe_jd = f"{jd} Reference {run_token}-{i}."
                 cold.append(time_post(client, args.base, "/api/analyze", pdf, probe_jd))
                 last_cold_jd = probe_jd
         except Unavailable as exc:
@@ -145,6 +153,15 @@ def main() -> None:
 
         if cold:
             results["analyze_cold"] = summarise("/api/analyze (cache miss)", cold)
+            # A genuine model round trip is seconds. Anything an order of
+            # magnitude faster was served from somewhere else, and comparing it
+            # against the warm figure would report a meaningless speedup.
+            if results["analyze_cold"]["p50_ms"] < 1000:
+                notes.append(
+                    f"cold p50 is {results['analyze_cold']['p50_ms']:.0f}ms, far below "
+                    "a real model round trip - these requests did not reach Gemini, "
+                    "so the cache comparison is not valid")
+                results["analyze_cold"]["suspect"] = True
 
         # --- 3. AI path, cache hit -------------------------------------------
         # Re-uses the last cold request's job description, which already
@@ -177,7 +194,7 @@ def main() -> None:
     cold_s = results.get("analyze_cold")
     warm_s = results.get("analyze_warm")
 
-    if cold_s and warm_s:
+    if cold_s and warm_s and not cold_s.get("suspect"):
         cache_active = warm_s["p50_ms"] < cold_s["p50_ms"] * 0.5
         results["cache_detected"] = cache_active
         if cache_active:
@@ -185,7 +202,7 @@ def main() -> None:
             results["cache_reduction_pct"] = round(
                 (1 - warm_s["p50_ms"] / cold_s["p50_ms"]) * 100, 1)
 
-    if kw and cold_s:
+    if kw and cold_s and not cold_s.get("suspect"):
         results["keyword_vs_ai_speedup_x"] = round(cold_s["p50_ms"] / kw["p50_ms"], 1)
 
     results["notes"] = notes
