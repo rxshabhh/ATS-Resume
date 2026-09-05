@@ -2,22 +2,22 @@
   "keyword_score": {
     "endpoint": "/api/keyword-score",
     "samples": 15,
-    "mean_ms": 18.1,
-    "p50_ms": 17.5,
-    "p95_ms": 24.8,
-    "min_ms": 15.7,
-    "max_ms": 24.8
+    "mean_ms": 15.9,
+    "p50_ms": 15.9,
+    "p95_ms": 18.3,
+    "min_ms": 15.0,
+    "max_ms": 18.3
   },
   "analyze_cold": {
     "endpoint": "/api/analyze (cache miss)",
-    "samples": 3,
-    "mean_ms": 11750.9,
-    "p50_ms": 10567.3,
-    "p95_ms": 16456.0,
-    "min_ms": 8229.3,
-    "max_ms": 16456.0
+    "samples": 1,
+    "mean_ms": 10085.8,
+    "p50_ms": 10085.8,
+    "p95_ms": 10085.8,
+    "min_ms": 10085.8,
+    "max_ms": 10085.8
   },
-  "keyword_vs_ai_speedup_x": 603.8,
+  "keyword_vs_ai_speedup_x": 634.3,
   "notes": [
     "warm-cache measurement unavailable: 502 from /api/analyze: The analysis service is unavailable. Please try again shortly."
   ]

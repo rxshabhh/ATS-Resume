@@ -17,16 +17,20 @@ model-driven scripts together want more than that:
 |---|---|
 | `variance.py --runs 15` | 15 |
 | `agreement.py` (12 pairs) | 12 |
-| **total** | **27 — over the daily limit** |
+| `latency.py --ai-samples 3` | 3 |
 
-Running both on one day exhausts the quota partway through the second and
-produces a correlation over three or four points, which is noise. `agreement.py`
-now stops as soon as it sees a 429 and refuses to report a correlation below 8
-pairs, but the planning is still yours.
+`latency.py` + `agreement.py` is 15, which fits in a day. Adding `variance.py`
+does not — run that one on its own day.
 
-Run them on **different days**, or lower `--runs` to 8 so both fit in one.
-Failed calls cost quota too: each `_call_gemini` retries once, so a failure
-spends two requests, not one.
+Failed calls still cost quota. A transient failure is now retried with backoff
+up to `MAX_ATTEMPTS` (3), so one failing request can spend three; a terminal
+failure such as an invalid key costs exactly one, because it is not retried.
+
+`agreement.py` stops at the first 429 rather than spending requests on pairs
+that cannot succeed, and refuses to report a correlation below 8 pairs.
+
+**The daily quota resets on Google's clock, not at your local midnight.** If a
+run dies on a 429, the fix is to wait, not to re-run immediately.
 
 ---
 
@@ -36,7 +40,7 @@ spends two requests, not one.
 |---|---|---|
 | `variance.py` | Does the LLM return the same score twice on identical input? | Gemini API |
 | `agreement.py` | Do the LLM and the deterministic scorer agree? | Gemini API |
-| `latency.py` | How fast is each path, and what does the cache buy? | running server (+ Redis for the cache figure) |
+| `latency.py` | How fast is each path, and what does the cache buy? | running server, **Redis running**, `--ai-samples` requests |
 
 Results are written as JSON to `backend/benchmark_results/`.
 

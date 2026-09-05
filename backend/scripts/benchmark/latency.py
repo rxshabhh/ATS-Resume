@@ -12,10 +12,10 @@ Measures three things against a running server:
 If Redis is not running the warm figure will match the cold one, and the script
 says so rather than quietly reporting a meaningless number.
 
-QUOTA. The AI measurements cost `--ai-samples + 1` Gemini requests (the extra
-one seeds the cache for the warm test; the cache hits after it are free). The
-free tier allows 20 per day. The default of 3 therefore spends 4, leaving room
-for agreement.py's 12 on the same day.
+QUOTA. The AI measurements cost exactly `--ai-samples` Gemini requests. The
+warm test re-uses a cold request's input, so it adds nothing. The free tier
+allows 20 per day, so the default of 3 leaves ample room for agreement.py's 12
+on the same day.
 
 Any AI measurement that fails is reported as unavailable rather than aborting
 the run: the deterministic numbers cost nothing and are worth keeping.
@@ -131,12 +131,14 @@ def main() -> None:
         # A unique job description per sample guarantees a miss, so these are
         # genuine model round trips rather than one call and N replays.
         print(f"AI path (cold, unique input each time), {args.ai_samples} samples"
-              f"  [{args.ai_samples + 1} Gemini requests including the warm seed]")
+              f"  [{args.ai_samples} Gemini requests]")
         cold: list[float] = []
+        last_cold_jd: str | None = None
         try:
             for i in range(args.ai_samples):
-                cold.append(time_post(client, args.base, "/api/analyze", pdf,
-                                      f"{jd} Reference {i}."))
+                probe_jd = f"{jd} Reference {i}."
+                cold.append(time_post(client, args.base, "/api/analyze", pdf, probe_jd))
+                last_cold_jd = probe_jd
         except Unavailable as exc:
             notes.append(f"AI path unavailable: {exc}")
             print(f"  unavailable: {exc}")
@@ -145,15 +147,21 @@ def main() -> None:
             results["analyze_cold"] = summarise("/api/analyze (cache miss)", cold)
 
         # --- 3. AI path, cache hit -------------------------------------------
-        # The seeding call is the miss that populates the cache; only the calls
-        # after it are measured, and if Redis is up they never reach Gemini.
+        # Re-uses the last cold request's job description, which already
+        # populated the cache. Seeding with a fresh one instead cost an extra
+        # Gemini request and added a failure point: a run could measure the
+        # cold path successfully and still lose the cache figure because that
+        # one extra call hit the quota. With the cache working these repeats
+        # never reach Gemini at all, so this measurement is now free.
+        #
+        # If they DO reach Gemini the timings will look like the cold path,
+        # which is exactly the signal that the cache is not working.
         warm: list[float] = []
-        if cold:
-            print(f"AI path (warm, identical input), {args.repeats} samples")
-            warm_jd = f"{jd} Cache probe."
+        if cold and last_cold_jd:
+            print(f"AI path (warm, identical input), {args.repeats} samples"
+                  f"  [0 Gemini requests if the cache is working]")
             try:
-                time_post(client, args.base, "/api/analyze", pdf, warm_jd)
-                warm = [time_post(client, args.base, "/api/analyze", pdf, warm_jd)
+                warm = [time_post(client, args.base, "/api/analyze", pdf, last_cold_jd)
                         for _ in range(args.repeats)]
                 results["analyze_warm"] = summarise("/api/analyze (cache hit)", warm)
             except Unavailable as exc:
